@@ -1,7 +1,5 @@
-
 <?php
 include 'db_connection.php';
-
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -18,6 +16,21 @@ include 'db_connection.php';
     <div class="container">
         <h2>Gestion Économique</h2>
         <!-- Economic management content goes here -->
+        <?php
+        // Fetch economic data from the database
+        $connection = get_db_connection();
+        $query = "SELECT * FROM economic_data"; // Example query
+        $result = $connection->query($query);
+        
+        if ($result->num_rows > 0) {
+            while($row = $result->fetch_assoc()) {
+                echo "<div>{$row['data_field']}</div>"; // Adjust according to your data structure
+            }
+        } else {
+            echo "No data found.";
+        }
+        $connection->close();
+        ?>
     </div>
 </body>
 </html>
