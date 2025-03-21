@@ -1,9 +1,27 @@
+<?php
+// db_connection.php
+$servername = "localhost";
+$username = "username";
+$password = "password";
+$dbname = "database_name";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Intranet Role Play</title>
+    <?php include 'db_connection.php'; ?>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -52,6 +70,12 @@
 <body class="min-h-screen">
     <!-- Loading Indicator -->
     <div id="loading-indicator" class="fixed inset-0 modal-backdrop flex items-center justify-center z-50 hidden">
+        <?php
+        // Fetch departments from the database
+        $sql = "SELECT * FROM departments";
+        $result = $conn->query($sql);
+        ?>
+
         <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-4">
             <div class="loading-spinner"></div>
             <p class="text-gray-700 font-medium">Chargement en cours...</p>
@@ -65,12 +89,13 @@
                 <div class="flex items-center space-x-4">
                     <h1 class="text-xl font-bold">Intranet RP</h1>
                     <div id="nav-links" class="hidden md:flex space-x-4">
-                        <a href="#" class="hover:text-gray-300 transition-colors">Accueil</a>
-                        <a href="#" class="hover:text-gray-300 transition-colors">Départements</a>
-                        <a href="#" class="hover:text-gray-300 transition-colors">Personnel</a>
-                        <a href="#" class="hover:text-gray-300 transition-colors">Rapports</a>
-                        <a href="#" class="hover:text-gray-300 transition-colors">Sanctions</a>
-                        <a href="#" class="hover:text-gray-300 transition-colors">Budget</a>
+                        <a href="index.php" class="hover:text-gray-300 transition-colors">Accueil</a>
+                        <a href="departments.php" class="hover:text-gray-300 transition-colors">Départements</a>
+                        <a href="personnel.php" class="hover:text-gray-300 transition-colors">Personnel</a>
+                        <a href="reports.php" class="hover:text-gray-300 transition-colors">Rapports</a>
+                        <a href="sanctions.php" class="hover:text-gray-300 transition-colors">Sanctions</a>
+                        <a href="budget.php" class="hover:text-gray-300 transition-colors">Budget</a>
+
                     </div>
                 </div>
                 <div id="user-info" class="hidden items-center space-x-4">
@@ -128,7 +153,16 @@
                     </button>
                 </div>
                 <div id="departments-list" class="space-y-4">
-                    <!-- Les départements seront ajoutés ici dynamiquement -->
+                    <?php
+                    if ($result->num_rows > 0) {
+                        while($row = $result->fetch_assoc()) {
+                            echo "<div class='department-item'>" . $row["name"] . "</div>";
+                        }
+                    } else {
+                        echo "Aucun département trouvé.";
+                    }
+                    ?>
+
                 </div>
             </div>
 
@@ -143,8 +177,20 @@
                         <i class="fas fa-plus-circle"></i>
                     </button>
                 </div>
-                <div id="personnel-list" class="space-y-4">
-                    <!-- Le personnel sera ajouté ici dynamiquement -->
+    <div id="personnel-list" class="space-y-4">
+                    <?php
+                    // Fetch personnel from the database
+                    $sql_personnel = "SELECT * FROM personnel";
+                    $result_personnel = $conn->query($sql_personnel);
+                    if ($result_personnel->num_rows > 0) {
+                        while($row = $result_personnel->fetch_assoc()) {
+                            echo "<div class='personnel-item'>" . $row["name"] . "</div>";
+                        }
+                    } else {
+                        echo "Aucun personnel trouvé.";
+                    }
+                    ?>
+
                 </div>
             </div>
 
@@ -159,8 +205,20 @@
                         <i class="fas fa-plus-circle"></i>
                     </button>
                 </div>
-                <div id="reports-list" class="space-y-4">
-                    <!-- Les rapports seront ajoutés ici dynamiquement -->
+    <div id="reports-list" class="space-y-4">
+                    <?php
+                    // Fetch reports from the database
+                    $sql_reports = "SELECT * FROM reports";
+                    $result_reports = $conn->query($sql_reports);
+                    if ($result_reports->num_rows > 0) {
+                        while($row = $result_reports->fetch_assoc()) {
+                            echo "<div class='report-item'>" . $row["title"] . "</div>";
+                        }
+                    } else {
+                        echo "Aucun rapport trouvé.";
+                    }
+                    ?>
+
                 </div>
             </div>
 
@@ -175,8 +233,20 @@
                         <i class="fas fa-plus-circle"></i>
                     </button>
                 </div>
-                <div id="sanctions-list" class="space-y-4">
-                    <!-- Les sanctions seront ajoutées ici dynamiquement -->
+    <div id="sanctions-list" class="space-y-4">
+                    <?php
+                    // Fetch sanctions from the database
+                    $sql_sanctions = "SELECT * FROM sanctions";
+                    $result_sanctions = $conn->query($sql_sanctions);
+                    if ($result_sanctions->num_rows > 0) {
+                        while($row = $result_sanctions->fetch_assoc()) {
+                            echo "<div class='sanction-item'>" . $row["reason"] . "</div>";
+                        }
+                    } else {
+                        echo "Aucune sanction trouvée.";
+                    }
+                    ?>
+
                 </div>
             </div>
 
@@ -191,8 +261,20 @@
                         <i class="fas fa-plus-circle"></i>
                     </button>
                 </div>
-                <div id="budget-list" class="space-y-4">
-                    <!-- Les informations budgétaires seront ajoutées ici dynamiquement -->
+    <div id="budget-list" class="space-y-4">
+                    <?php
+                    // Fetch budget requests from the database
+                    $sql_budget = "SELECT * FROM budget_requests";
+                    $result_budget = $conn->query($sql_budget);
+                    if ($result_budget->num_rows > 0) {
+                        while($row = $result_budget->fetch_assoc()) {
+                            echo "<div class='budget-item'>" . $row["amount"] . "</div>";
+                        }
+                    } else {
+                        echo "Aucune demande de budget trouvée.";
+                    }
+                    ?>
+
                 </div>
             </div>
         </div>
@@ -212,12 +294,8 @@
                 <input type="number" name="budget" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
             </div>
             <div class="flex justify-end space-x-3">
-                <button type="button" onclick="hideModal('department-modal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
-                    Annuler
-                </button>
-                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600">
-                    Ajouter
-                </button>
+                <button type="button" onclick="hideModal('department-modal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Annuler</button>
+                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-600">Ajouter</button>
             </div>
         </form>
     </div>
@@ -249,12 +327,8 @@
                 </select>
             </div>
             <div class="flex justify-end space-x-3">
-                <button type="button" onclick="hideModal('personnel-modal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
-                    Annuler
-                </button>
-                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-md hover:bg-green-600">
-                    Ajouter
-                </button>
+                <button type="button" onclick="hideModal('personnel-modal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Annuler</button>
+                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-md hover:bg-green-600">Ajouter</button>
             </div>
         </form>
     </div>
@@ -286,12 +360,8 @@
                 </select>
             </div>
             <div class="flex justify-end space-x-3">
-                <button type="button" onclick="hideModal('report-modal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
-                    Annuler
-                </button>
-                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-yellow-500 rounded-md hover:bg-yellow-600">
-                    Créer
-                </button>
+                <button type="button" onclick="hideModal('report-modal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Annuler</button>
+                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-yellow-500 rounded-md hover:bg-yellow-600">Créer</button>
             </div>
         </form>
     </div>
@@ -319,12 +389,8 @@
                 </select>
             </div>
             <div class="flex justify-end space-x-3">
-                <button type="button" onclick="hideModal('sanction-modal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
-                    Annuler
-                </button>
-                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600">
-                    Ajouter
-                </button>
+                <button type="button" onclick="hideModal('sanction-modal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Annuler</button>
+                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600">Ajouter</button>
             </div>
         </form>
     </div>
@@ -348,12 +414,8 @@
                 <textarea name="purpose" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
             </div>
             <div class="flex justify-end space-x-3">
-                <button type="button" onclick="hideModal('budget-modal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
-                    Annuler
-                </button>
-                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-emerald-500 rounded-md hover:bg-emerald-600">
-                    Soumettre
-                </button>
+                <button type="button" onclick="hideModal('budget-modal')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">Annuler</button>
+                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-emerald-500 rounded-md hover:bg-emerald-600">Soumettre</button>
             </div>
         </form>
     </div>
@@ -365,5 +427,6 @@
     <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
+    <?php $conn->close(); ?>
 </body>
 </html>

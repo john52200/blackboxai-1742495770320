@@ -21,16 +21,41 @@ async function handleDepartmentSubmit(event) {
             body: JSON.stringify(data)
         });
         
+        if (response.error) {
+            throw new Error(response.error);
+        }
+
         utils.showSuccess('Département créé avec succès');
         utils.hideModal('department-modal');
         form.reset();
         await loadUserData(window.auth.getCurrentUser());
     } catch (error) {
-        utils.showError('Erreur lors de la création du département');
+        utils.showError('Erreur lors de la création du département: ' + error.message);
     } finally {
         utils.hideLoading();
     }
 }
+
+async function handleDeleteDepartment(id) {
+    try {
+        utils.showLoading('Suppression du département...');
+        const response = await utils.fetchAPI(`departments/${id}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.error) {
+            throw new Error(response.error);
+        }
+
+        utils.showSuccess('Département supprimé avec succès');
+        await loadDepartments(); // Refresh the list of departments
+    } catch (error) {
+        utils.showError('Erreur lors de la suppression du département: ' + error.message);
+    } finally {
+        utils.hideLoading();
+    }
+}
+
 
 async function handlePersonnelSubmit(event) {
     event.preventDefault();
@@ -91,16 +116,36 @@ async function handleReportSubmit(event) {
             body: JSON.stringify(data)
         });
         
+        if (response.error) {
+            throw new Error(response.error);
+        }
+
+        // Assign department to report
+        const departmentId = data.department; // Assuming department is selected in the form
+        await utils.fetchAPI(`reports/${response.id}/assign-department`, {
+            method: 'POST',
+            body: JSON.stringify({ department_id: departmentId })
+        });
+
+        // Update visibility of the report
+        await utils.fetchAPI(`reports/${response.id}/visibility`, {
+            method: 'POST',
+            body: JSON.stringify({ visibility: true }) // Set visibility to true by default
+        });
+
         utils.showSuccess('Rapport créé avec succès');
         utils.hideModal('report-modal');
         form.reset();
         await loadUserData(window.auth.getCurrentUser());
     } catch (error) {
-        utils.showError('Erreur lors de la création du rapport');
+        utils.showError('Erreur lors de la création du rapport: ' + error.message);
     } finally {
         utils.hideLoading();
     }
 }
+
+
+
 
 async function handleSanctionSubmit(event) {
     event.preventDefault();

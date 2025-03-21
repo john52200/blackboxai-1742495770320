@@ -1,122 +1,84 @@
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
-import os
-from dotenv import load_dotenv
+import mysql.connector
 
-load_dotenv()
+def create_database():
+    connection = mysql.connector.connect(
+        host='localhost',
+        user='your_username',  # Replace with your MySQL username
+        password='your_password'  # Replace with your MySQL password
+    )
+    cursor = connection.cursor()
+    cursor.execute("CREATE DATABASE IF NOT EXISTS your_database")  # Replace with your database name
+    cursor.close()
+    connection.close()
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///intranet.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+def create_tables():
+    connection = mysql.connector.connect(
+        host='localhost',
+        user='your_username',  # Replace with your MySQL username
+        password='your_password',  # Replace with your MySQL password
+        database='your_database'  # Replace with your MySQL database name
+    )
+    cursor = connection.cursor()
 
-db = SQLAlchemy(app)
+    # Create departments table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS departments (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            budget DECIMAL(10, 2) NOT NULL
+        )
+    ''')
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    name = db.Column(db.String(120), nullable=False)
-    role = db.Column(db.String(50), nullable=False)
-    department = db.Column(db.String(100), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    auth_type = db.Column(db.String(20), default='local')  # 'local' or 'auth0'
-    auth0_id = db.Column(db.String(100), unique=True, nullable=True)
+    # Create personnel table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS personnel (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            email VARCHAR(255) NOT NULL,
+            department_id INT,
+            role ENUM('user', 'department_head', 'director') NOT NULL,
+            FOREIGN KEY (department_id) REFERENCES departments(id)
+        )
+    ''')
 
-    def __init__(self, email, name, role, department, auth_type='local', auth0_id=None):
-        self.email = email
-        self.name = name
-        self.role = role
-        self.department = department
-        self.auth_type = auth_type
-        self.auth0_id = auth0_id
+    # Create reports table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS reports (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            content TEXT NOT NULL,
+            department_id INT,
+            classification ENUM('Public', 'Restreint', 'Confidentiel') NOT NULL,
+            FOREIGN KEY (department_id) REFERENCES departments(id)
+        )
+    ''')
 
-class Department(db.Model):
-    __tablename__ = 'departments'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    status = db.Column(db.String(20), default='actif')
-    budget = db.Column(db.Float, default=0.0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # Create sanctions table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS sanctions (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT,
+            reason TEXT NOT NULL,
+            severity ENUM('légère', 'modérée', 'sévère') NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES personnel(id)
+        )
+    ''')
 
-    def __init__(self, name, budget, status='actif'):
-        self.name = name
-        self.budget = budget
-        self.status = status
+    # Create budget requests table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS budget_requests (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            department_id INT,
+            amount DECIMAL(10, 2) NOT NULL,
+            purpose TEXT NOT NULL,
+            FOREIGN KEY (department_id) REFERENCES departments(id)
+        )
+    ''')
 
-class BudgetRequest(db.Model):
-    __tablename__ = 'budget_requests'
-    id = db.Column(db.Integer, primary_key=True)
-    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=False)
-    amount = db.Column(db.Float, nullable=False)
-    purpose = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(20), default='en_attente')
-    requested_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-class Report(db.Model):
-    __tablename__ = 'reports'
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=False)
-    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    status = db.Column(db.String(20), default='en_attente')
-    classification = db.Column(db.String(50), default='Public')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-class Sanction(db.Model):
-    __tablename__ = 'sanctions'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    issued_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    reason = db.Column(db.Text, nullable=False)
-    severity = db.Column(db.String(20), nullable=False)
-    status = db.Column(db.String(20), default='active')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-def init_db():
-    with app.app_context():
-        # Create all tables
-        db.create_all()
-
-        # Check if we need to add initial data
-        if User.query.count() == 0:
-            # Add default users
-            default_users = [
-                User(
-                    email='director@site.com',
-                    name='Jean Dupont',
-                    role='director',
-                    department='Administration'
-                ),
-                User(
-                    email='scientific.head@site.com',
-                    name='Marie Laurent',
-                    role='department_head',
-                    department='Scientifique'
-                ),
-                User(
-                    email='security.head@site.com',
-                    name='Pierre Martin',
-                    role='department_head',
-                    department='Sécurité'
-                )
-            ]
-            for user in default_users:
-                db.session.add(user)
-
-            # Add default departments
-            departments = [
-                Department(name='Département Scientifique', budget=500000),
-                Department(name='Département Sécurité', budget=300000),
-                Department(name='Département Logistique', budget=200000)
-            ]
-            for dept in departments:
-                db.session.add(dept)
-
-            db.session.commit()
-            print("Database initialized with default data.")
+    connection.commit()
+    cursor.close()
+    connection.close()
 
 if __name__ == '__main__':
-    init_db()
-    print("Database initialization complete.")
+    create_database()
+    create_tables()
