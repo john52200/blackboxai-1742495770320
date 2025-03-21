@@ -1,5 +1,5 @@
 <?php
-include 'db_connection.php';
+include '../db_connection.php';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -7,7 +7,7 @@ include 'db_connection.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Salaires</title>
-    <link href="css/styles.css" rel="stylesheet">
+    <link href="../css/styles.css" rel="stylesheet">
 </head>
 <body>
     <nav class="navbar">
@@ -15,7 +15,6 @@ include 'db_connection.php';
     </nav>
     <div class="container">
         <h2>Gestion des Salaires</h2>
-        <!-- Salary management content goes here -->
         <?php
         // Fetch salary data from the database
         $connection = get_db_connection();
